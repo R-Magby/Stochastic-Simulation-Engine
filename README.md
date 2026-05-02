@@ -51,7 +51,7 @@ Aplicando el lema de Itô, la solución exacta en pasos discretos de tamaño
 $\Delta t = 1/252$ es:
 
 $$
-S_{t+\Delta t} = S_t \cdot \exp\!\left[\left(\mu - \frac{\sigma^2}{2}\right)\Delta t + \sigma \sqrt{\Delta t}\, Z\right], \quad Z \sim \mathcal{N}(0,1)
+S_{t+\Delta t} = S_t \cdot \exp\left[\left(\mu - \frac{\sigma^2}{2}\right)\Delta t + \sigma \sqrt{\Delta t}\, Z\right], \quad Z \sim \mathcal{N}(0,1)
 $$
 
 ### Métricas de riesgo calculadas
