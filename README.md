@@ -87,7 +87,7 @@ Heston y BSM/
 ### 1. Clonar / posicionarse en el directorio del proyecto
 
 ```bash
-cd "Heston y BSM"
+cd "Stochastic-Volatility-Engine"
 ```
 
 ### 2. Construir la imagen
@@ -131,21 +131,6 @@ docker-compose down
 
 ---
 
-## 📊 Outputs esperados (consola)
-
-```
-Dias pasados: 3488
-Precio actual: 82755.0
-Volatilidad anual: 0.0267
-Riesgo anual: 0.0007
-
-Precio inicial:                 $82755.00
-Precio medio final:             $82995.25
-VaR 95%:                        -5.42%
-CVaR 95% (Expected Shortfall):  -6.58%
-Probabilidad de pérdida:        46.4%
-Probabilidad de +20%:           0.0%
-```
 
 ### Reporte Visual del Activo
 > Serie histórica (train/test) y distribución de precios del activo.
