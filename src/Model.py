@@ -62,9 +62,12 @@ class BSMmodel(MonteCarloSimulator):
         )
         try:
             self.optimize = optimize
-            self.dt = 1 / self.dias_de_trending
-            self.Z = np.random.normal(size=(self.N_casos_posibles, self.dias_de_simulacion - 1))
+            self.dt = 1 / dias_de_trending
+            self.Z = np.random.normal(size=(N_casos_posibles, dias_de_simulacion - 1))
             self.drift = self.mu - 0.5 * self.sigma ** 2
+
+            self.S_t = np.ones((N_casos_posibles, dias_de_simulacion))
+            self.S_t[:, 0] = precio_inicial
 
             if self.optimize == "For":
                 logger.info("Estrategia: ciclo For")
@@ -80,7 +83,7 @@ class BSMmodel(MonteCarloSimulator):
             logger.critical("error en __init__: %s", exc, exc_info=True)
             raise
 
-    def simulate(self) -> np.ndarray:
+    def simulate(self):
         """
         Despacha la simulación BSM a la estrategia seleccionada.
 
@@ -98,15 +101,13 @@ class BSMmodel(MonteCarloSimulator):
             self.N_casos_posibles, self.dias_de_simulacion, self.optimize,
         )
 
-        # Inicializar matriz de precios
-        self.S_t = np.ones((self.N_casos_posibles, self.dias_de_simulacion))
-        self.S_t[:, 0] = self.precio_inicial
 
         if self.optimize == "For":
             for i in range(1, self.dias_de_simulacion):
                 self.S_t[:, i] = self.S_t[:, i-1] * np.exp(self.drift * self.dt + self.sigma * self.Z[:, i-1] * np.sqrt(self.dt))
 
         elif self.optimize == "NumpyVectorization":
+            self.S_t[:, 1]  = self.S_t[:, 0]
             self.S_t[:, 1:] = np.cumprod(
                 self.S_t[:, 1:] * np.exp((self.drift * self.dt + self.sigma * self.Z * np.sqrt(self.dt))),
                 axis=1,

@@ -22,7 +22,7 @@ Peticiones a claude
 
 
 Version 3
-1) _Solucionar Graficos
+1) Solucionar Graficos
 2) _Analizar modelo Heston
 3) _Multiporcessing en Heston 
 4) _Mejoras en la documentacion

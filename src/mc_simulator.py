@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 from abc import ABC, abstractmethod
 from src.logger import get_logger
+logger = get_logger(__name__)
 
 
 class MonteCarloSimulator:
@@ -20,7 +21,6 @@ class MonteCarloSimulator:
         N_casos_posibles: int = 100,
         dias_de_simulacion: int = 31,
         modelo=None,
-        log_retornos=None,
         dias_de_trending: int = 252,
     ):
         """
@@ -57,8 +57,7 @@ class MonteCarloSimulator:
 
     def informe_visual(self):
         """
-        Genera un gráfico con las trayectorias simuladas y la distribución del
-        precio final.
+        Genera un gráfico con las trayectorias simuladas y la distribución del precio final.
 
         Input:
             None
@@ -66,6 +65,10 @@ class MonteCarloSimulator:
         Output:
             None (muestra el gráfico)
         """
+        if self.S_t is None:
+            logger.error("Error en actualizacion de S_t")
+            raise ValueError("Debe ejecutar el método simulate() antes de generar el informe visual.")
+        
         fig, axl = plt.subplots(1, 2, figsize=(14, 6))
 
         for iter in range(self.N_casos_posibles):
@@ -133,7 +136,6 @@ class MonteCarloSimulator:
     def reporte(self):
         """
         Imprime métricas de riesgo: VaR, CVaR y probabilidades.
-
         Input:
             None
 
