@@ -5,6 +5,8 @@ Módulo del Simulador Monte Carlo (modelo Black-Scholes-Merton).
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
+from abc import ABC, abstractmethod
+from src.logger import get_logger
 
 
 class MonteCarloSimulator:
@@ -47,31 +49,11 @@ class MonteCarloSimulator:
         self.dias_de_simulacion = dias_de_simulacion
         self.S_t = None
 
-    def MC_simulation(self) -> np.ndarray:
+    @abstractmethod
+    def simulate(self) -> np.ndarray:
         """
         Ejecuta la simulación de Monte Carlo (BSM) y devuelve las trayectorias.
-
-        Input:
-            None
-
-        Output:
-            np.ndarray: Matriz de shape (N_casos_posibles, dias_de_simulacion)
-                        con los precios simulados.
         """
-        dt = 1 / self.dias_de_trending
-        Z = np.random.normal(size=(self.N_casos_posibles, self.dias_de_simulacion - 1))
-
-        drift = self.mu - 0.5 * self.sigma ** 2
-        self.S_t = np.ones((self.N_casos_posibles, self.dias_de_simulacion))
-
-        self.S_t[:, :2] = self.precio_inicial
-
-        self.S_t[:, 1:] = np.cumprod(
-            self.S_t[:, 1:] * np.exp((drift * dt + self.sigma * Z * np.sqrt(dt))),
-            axis=1,
-        )
-
-        return self.S_t
 
     def informe_visual(self):
         """
@@ -133,9 +115,7 @@ class MonteCarloSimulator:
         axl[1].axvline(x=p25[-1], color="r", linewidth=1.2, ls="--", label="Var 25%")
         axl[1].axvline(x=p75[-1], color="r", linewidth=1.2, ls="--")
         axl[1].axvline(self.precio_inicial, color='black', linestyle='--', label='Precio actual')
-        axl[1].axvline(
-            np.percentile(self.S_t[:, -1], 5), color='magenta', linestyle='--', label='VaR 95%'
-        )
+        axl[1].axvline(np.percentile(self.S_t[:, -1], 5), color='magenta', linestyle='--', label='VaR 95%')
 
         axl[1].set_title('Distribución de precio final')
         axl[1].legend()

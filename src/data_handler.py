@@ -112,7 +112,6 @@ class manipulate_data:
             thispatch.set_facecolor(color)
 
         axl[1].set_title(f"Distribución | Asimetria: {skew(self.activos.Close).round(2)} | Curtosis {kurtosis(self.activos.Close).round(2)}" )
-        axl[1].legend()
 
         fig.suptitle("Reporte Visual del Activo")
         plt.savefig("Reporte Visual del Activo.png")

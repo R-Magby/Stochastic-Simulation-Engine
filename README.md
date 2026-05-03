@@ -87,7 +87,7 @@ Heston y BSM/
 ### 1. Clonar / posicionarse en el directorio del proyecto
 
 ```bash
-cd "Heston y BSM"
+cd "Stochastic-Volatility-Engine"
 ```
 
 ### 2. Construir la imagen
