@@ -59,6 +59,7 @@ class BSMmodel(MonteCarloSimulator):
             dias_de_trending,
         )
         try:
+
             self.optimize = optimize
             self.dt = 1 / dias_de_trending
             self.Z = np.random.normal(size=(N_casos_posibles, dias_de_simulacion - 1))
@@ -67,6 +68,7 @@ class BSMmodel(MonteCarloSimulator):
             self.S_t = np.ones((N_casos_posibles, dias_de_simulacion))
             self.S_t[:, 0] = self.precio_inicial
 
+            self.modelo = "BSM"          
 
             if self.optimize == "For":
                 logger.info("Estrategia: ciclo For")
@@ -165,6 +167,13 @@ class HestonModel(MonteCarloSimulator):
             self.v0 = self.sigma ** 2 if v0 is None else v0
             self.dt = 1 / self.dias_de_trending
 
+            self.modelo = "Heston"
+
+            if 2*self.kappa*self.theta > self.v0:
+                logger.warning(
+                    "condicion de Feller no satisfecha: 2*kappa*theta > v0"
+                )   
+
             if self.optimize == "For":
                 logger.info("Estrategia: ciclo For")
             elif self.optimize == "NumpyVectorization":
@@ -230,7 +239,7 @@ class HestonModel(MonteCarloSimulator):
             "HestonModel.simulate() | N=%d | T=%d | optimize=%s",
             self.N_casos_posibles, self.dias_de_simulacion, self.optimize,
         )
-        self._init_stochastic_vars()
+        self._init_variables()
 
         if self.optimize == "For":
             return self.ForLoop()

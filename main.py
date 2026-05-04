@@ -80,20 +80,45 @@ def main() -> None:
 
         simulation.simulate()
         datos_simulados = simulation.S_t
-
+        simulation.informe_visual()
     except Exception as e:
         logger.critical("Fallo durante la simulación Monte Carlo: %s", e, exc_info=True)
         raise
 
     fin = time.time()
-    logger.info(f"Duración: {fin - inicio} segundos")
+    logger.info(f"Duración BSM: {fin - inicio} segundos")
+
+    inicio = time.time()
+
+    try:
+        simulation = HestonModel(
+            data_training=datos.train,
+            data_test=datos.test,
+            N_casos_posibles=N_SIMULACIONES,
+            dias_de_simulacion=n_dias,
+            optimize="NumpyVectorization",
+            rho = 0.5,
+            kappa = 0.9,
+            theta = 0.04,
+        )
+        simulation.simulate()
+        datos_heston = simulation.S_t
+        simulation.informe_visual()
+    except Exception as e:
+        logger.critical("Fallo durante la simulación Monte Carlo: %s", e, exc_info=True)
+        raise
+
+    fin = time.time()
+    logger.info(f"Duración Heston: {fin - inicio} segundos")
+
 
     # 4. Reporte y visualización 
     logger.info("Generando reportes y gráficos...")
     try:
-        simulation.reporte()
-        simulation.informe_visual()
-        
+        #simulation.reporte()
+        dicc_err, msj_log = simulation.analisis_de_errores()
+        logger.info(msj_log)
+
         # Registrar métricas de riesgo en el log
         precios_finales = datos_simulados[:, -1]
         retornos = (precios_finales - datos.precio_inicial) / datos.precio_inicial
@@ -102,7 +127,7 @@ def main() -> None:
         prob_perdida = float((precios_finales < datos.precio_inicial).mean())
         prob_ganar_20 = float((retornos > 0.20).mean())
 
-        mensaje_riesgo = f"VaR 95%: {var_95 * 100:.2f}%, CVaR 95%: {cvar_95 * 100:.2f}%, Probabilidad de pérdida: {prob_perdida * 100:.1f}%, Probabilidad de +20%: {prob_ganar_20 * 100:.1f}%"
+        mensaje_riesgo = f"Modelo {simulation.modelo} | VaR 95%: {var_95 * 100:.2f}%, CVaR 95%: {cvar_95 * 100:.2f}%, Probabilidad de pérdida: {prob_perdida * 100:.1f}%, Probabilidad de +20%: {prob_ganar_20 * 100:.1f}%"
         log_metricas_riesgo(logger, mensaje_riesgo)
 
         logger.info("Gráficos guardados correctamente.")

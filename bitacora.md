@@ -23,8 +23,9 @@ Peticiones a claude
 
 Version 3
 1) Solucionar Graficos
-2) _Analizar modelo Heston
-3) _Multiporcessing en Heston 
-4) _Mejoras en la documentacion
-5) _Mejoras en la implementacion del logger
-6) _Actualizacion de main.py
+2) Implementar modelo Heston
+3) Análisis de predicciones de los modelos
+4) _Multiporcessing en Heston 
+5) _Mejoras en la documentacion
+6) _Mejoras en la implementacion del logger
+7) _Actualizacion de main.py

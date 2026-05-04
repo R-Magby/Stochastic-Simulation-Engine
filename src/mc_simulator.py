@@ -5,6 +5,7 @@ Módulo del Simulador Monte Carlo (modelo Black-Scholes-Merton).
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import colors
+from scipy import stats
 from abc import ABC, abstractmethod
 from src.logger import get_logger
 logger = get_logger(__name__)
@@ -19,7 +20,6 @@ class MonteCarloSimulator:
         data_test: np.ndarray,
         N_casos_posibles: int = 100,
         dias_de_simulacion: int = 31,
-        modelo: str = None,
         dias_de_trending: int = 252,
     ):
         """
@@ -53,7 +53,7 @@ class MonteCarloSimulator:
         self.N_casos_posibles = N_casos_posibles
         self.dias_de_simulacion = dias_de_simulacion
 
-        self.modelo = modelo
+        self.modelo = None
         self.S_t = None
 
     @abstractmethod
@@ -151,10 +151,59 @@ class MonteCarloSimulator:
             fontsize=12,
             color='black',
         )
-        plt.savefig("Reporte Monte Carlo.png")
+        plt.savefig(f"Reporte Monte Carlo {self.modelo}.png")
 
         #plt.show()
 
+    def analisis_de_errores(self) -> str:
+
+        # errores ^2 dan mas peso a valores muy alejados
+        error_relativo_precio_mse = np.mean((self.data_test.values - self.S_t.mean(axis=0))**2)
+        
+        # MAE
+        error_relativo_precio_mae = np.mean(np.abs(self.data_test.values - self.S_t.mean(axis=0)))
+
+        #Crecimiento
+        Crecimiento_test = np.log((self.data_test / self.data_test.shift(1)).dropna()).values
+        Crecimiento_simulado_media = np.log((self.S_t[:,:-1]/ self.S_t[:,1:]).mean(axis=0))
+
+        error_relativo_crecimiento_mse = np.mean((Crecimiento_test - Crecimiento_simulado_media)**2)
+        error_relativo_crecimiento_mae = np.mean(np.abs(Crecimiento_test - Crecimiento_simulado_media))
+
+        #test de Kolmogorov-Smirnov
+        d, p = stats.ks_2samp(self.data_test.values.flatten(), self.S_t.mean(axis=0).flatten())
+        ks_test = f"Test de Kolmogorov-Smirnov: p={float(p):.3f}"
+        if p < 0.05:
+            ks_test += " | No se puede aceptar la hipótesis nula"
+        else:
+            ks_test += " | Se puede aceptar la hipótesis nula"
+
+        # Intervalos de confianza
+        ic_90 = np.percentile(self.S_t, [5, 95], axis=0)
+        lower = ic_90[0]
+        upper = ic_90[1]
+        real = self.data_test.values
+
+        coverage = np.mean((real >= lower) & (real <= upper))
+
+        #percentage
+        porcentajes_relative_price = self.S_t.mean(axis=0) / self.data_test.values 
+
+        # Output
+        dicc_errores = {
+            "error_relativo_precio_mse": float(error_relativo_precio_mse),
+            "error_relativo_precio_mae": float(error_relativo_precio_mae),
+            "error_relativo_crecimiento_mse": float(error_relativo_crecimiento_mse),
+            "error_relativo_crecimiento_mae": float(error_relativo_crecimiento_mae),
+            "ks_test_d": d,
+            "ks_test_p": float(p),
+            "coverage": float(coverage),
+            "porcentajes_relative_price": porcentajes_relative_price
+        }
+        mensaje_for_log = f"Error relativo precio mse: {error_relativo_precio_mse} | Error relativo precio mae: {error_relativo_precio_mae} | Intervalo de confianza del 90%: coverage: {coverage} % | {ks_test}"
+        return dicc_errores, mensaje_for_log
+
+        
     def reporte(self):
         """
         Imprime métricas de riesgo: VaR, CVaR y probabilidades.
