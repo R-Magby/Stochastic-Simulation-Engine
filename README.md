@@ -142,6 +142,11 @@ docker-compose down
 ### Reporte Monte Carlo (BSM)
 > Trayectorias simuladas con intervalos de confianza y distribución del precio final.
 
-![Reporte Monte Carlo](Reporte%20Monte%20Carlo.png)
+![Reporte Monte Carlo](Reporte%20Monte%20Carlo%20BSM.png)
 
+---
+### Reporte Monte Carlo (Heston)
+> Trayectorias simuladas con intervalos de confianza y distribución del precio final.
+
+![Reporte Monte Carlo](Reporte%20Monte%20Carlo%20Heston.png)
 
