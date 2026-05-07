@@ -55,6 +55,7 @@ class MonteCarloSimulator:
 
         self.modelo = None
         self.S_t = None
+        self.paramteros_simulacion={"mu":self.mu,"sigma":self.sigma,"precio_inicial":self.precio_inicial,"N_casos_posibles":self.N_casos_posibles,"dias_de_simulacion":self.dias_de_simulacion,"dias_de_trending":self.dias_de_trending}
 
     @abstractmethod
     def simulate(self) -> np.ndarray:
@@ -87,13 +88,37 @@ class MonteCarloSimulator:
 
         axl[0].plot(self.data_training, color = "blue",label="Data training",alpha=1.0)
         axl[0].plot(self.data_test, color = "green",label="Data test",alpha=1.0)
+
         #promedio de trayectorias
-        axl[0].plot(self.data_test.reset_index().Date, promedios, color="red", label="Mean",alpha=0.7, linewidth=0.8)
+        axl[0].fill_between(
+            range(self.S_t.shape[1]),
+            np.percentile(self.S_t, 5, axis=0),
+            np.percentile(self.S_t, 95, axis=0),
+            alpha=0.15,
+            color='magenta',
+            label='IC 90%',
+        )
+        axl[0].fill_between(
+            range(self.S_t.shape[1]),
+            p25,
+            p75,
+            alpha=0.25,
+            color='blue',
+            label='IC 50%',
+        )
+
+        axl[0].plot([self.data_test.iloc[252].index.date(),self.data_test.iloc[252].index.date()], [0,self.data_test.max() * 1.5],"k--", label="Precio actual",alpha=0.7, linewidth=0.8)
 
         axl[0].set_title('Prediccion vs Realidad')
         axl[0].set_xlabel("Dias")
         axl[0].tick_params(axis='x', rotation=45)
         axl[0].set_ylabel("USD")
+        axl[0].set_ylim(self.data_test.min() * 0.9,self.data_test.max() * 1.5)
+        try:
+            axl[0].set_xlim(self.data_training.index[-252*3].date() , self.data_test.index[-1].date())
+        except:
+            axl[0].set_xlim(self.data_test.index[0].date() , self.data_test.index[-1].date())
+
         axl[0].legend()
 
         # Grafico 2
@@ -119,10 +144,10 @@ class MonteCarloSimulator:
             label='IC 90%',
         )
 
-        axl[1].plot(promedios, color="red", label="Mean")
+        axl[1].plot(p50, color="red", label="Median")
 
-        perdida = (1 - promedios[-1] / self.precio_inicial) * 100
-        signo = np.sign(promedios[-1] - self.precio_inicial)
+        perdida = (1 - p50[-1] / self.precio_inicial) * 100
+        signo = np.sign(p50[-1] - self.precio_inicial)
         axl[1].set_title('Trayectorias simuladas')
         axl[1].set_xlabel("Dias")
         axl[1].set_ylabel("USD")
@@ -156,23 +181,25 @@ class MonteCarloSimulator:
         #plt.show()
 
     def analisis_de_errores(self) -> str:
+        #Percentiles
+        mediana = np.percentile(self.S_t, 50, axis=0)
 
         # errores ^2 dan mas peso a valores muy alejados
-        error_relativo_precio_mse = np.mean((self.data_test.values - self.S_t.mean(axis=0))**2)
+        error_relativo_precio_mse = np.mean((self.data_test.values - mediana)**2)
         
         # MAE
-        error_relativo_precio_mae = np.mean(np.abs(self.data_test.values - self.S_t.mean(axis=0)))
+        error_relativo_precio_mae = np.mean(np.abs(self.data_test.values - mediana))
 
         #Crecimiento
         Crecimiento_test = np.log((self.data_test / self.data_test.shift(1)).dropna()).values
-        Crecimiento_simulado_media = np.log((self.S_t[:,:-1]/ self.S_t[:,1:]).mean(axis=0))
+        Crecimiento_simulado_media = np.median(np.log((self.S_t[:,:-1]/ self.S_t[:,1:])),axis=0)
 
         error_relativo_crecimiento_mse = np.mean((Crecimiento_test - Crecimiento_simulado_media)**2)
         error_relativo_crecimiento_mae = np.mean(np.abs(Crecimiento_test - Crecimiento_simulado_media))
 
         #test de Kolmogorov-Smirnov
-        d, p = stats.ks_2samp(self.data_test.values.flatten(), self.S_t.mean(axis=0).flatten())
-        ks_test = f"Test de Kolmogorov-Smirnov: p={float(p):.3f}"
+        d, p = stats.ks_2samp(self.data_test.values.flatten(), mediana.flatten())
+        ks_test = f": p={float(p):.3f}"
         if p < 0.05:
             ks_test += " | No se puede aceptar la hipótesis nula"
         else:
@@ -187,32 +214,8 @@ class MonteCarloSimulator:
         coverage = np.mean((real >= lower) & (real <= upper))
 
         #percentage
-        porcentajes_relative_price = self.S_t.mean(axis=0) / self.data_test.values 
+        porcentajes_relative_price = mediana / self.data_test.values 
 
-        # Output
-        dicc_errores = {
-            "error_relativo_precio_mse": float(error_relativo_precio_mse),
-            "error_relativo_precio_mae": float(error_relativo_precio_mae),
-            "error_relativo_crecimiento_mse": float(error_relativo_crecimiento_mse),
-            "error_relativo_crecimiento_mae": float(error_relativo_crecimiento_mae),
-            "ks_test_d": d,
-            "ks_test_p": float(p),
-            "coverage": float(coverage),
-            "porcentajes_relative_price": porcentajes_relative_price
-        }
-        mensaje_for_log = f"Error relativo precio mse: {error_relativo_precio_mse} | Error relativo precio mae: {error_relativo_precio_mae} | Intervalo de confianza del 90%: coverage: {coverage} % | {ks_test}"
-        return dicc_errores, mensaje_for_log
-
-        
-    def reporte(self):
-        """
-        Imprime métricas de riesgo: VaR, CVaR y probabilidades.
-        Input:
-            None
-
-        Output:
-            None (imprime por consola)
-        """
         precios_finales = self.S_t[:, -1]
         retornos = (precios_finales - self.precio_inicial) / self.precio_inicial
 
@@ -221,9 +224,25 @@ class MonteCarloSimulator:
         prob_perdida = (precios_finales < self.precio_inicial).mean()
         prob_ganar_20 = (retornos > 0.20).mean()
 
-        print(f"Precio inicial:                 ${self.precio_inicial:.2f}")
-        print(f"Precio medio final:             ${precios_finales.mean():.2f}")
-        print(f"VaR 95%:                        {VaR_95 * 100:.2f}%")
-        print(f"CVaR 95% (Expected Shortfall):  {CVaR_95 * 100:.2f}%")
-        print(f"Probabilidad de pérdida:        {prob_perdida * 100:.1f}%")
-        print(f"Probabilidad de +20%:           {prob_ganar_20 * 100:.1f}%")
+
+
+        # Output
+        dicc_errores = {
+            "VaR_95": float(VaR_95),
+            "CVaR_95": float(CVaR_95),
+            "prob_loss": float(prob_perdida),
+            "prob_gain_20": float(prob_ganar_20),
+            "mse_price": float(error_relativo_precio_mse),
+            "mae_price": float(error_relativo_precio_mae),
+            "mse_growth": float(error_relativo_crecimiento_mse),
+            "mae_growth": float(error_relativo_crecimiento_mae),
+            "ks_test_d": d,
+            "ks_test_p": float(p),
+            "coverage": float(coverage),
+            "porcentajes_relative_price": porcentajes_relative_price
+        }
+        mensaje_for_log = " VaR95 = {VaR_95},CVaR95={CVaR_95}, Probabilidad de perdida={prob_loss}, Probabilidad de ganancia del 20%={prob_gain_20}, Mse precio={mse_price}, Mae precio={mae_price}, Mse crecimiento={mse_growth}, Mae crecimiento={mae_growth}, Cobertura={coverage} | Test de Kolmogorov-Smirnov {ks_test_d}, {ks_test_p},porcentajes_relative_price {porcentajes_relative_price}"
+        return dicc_errores, mensaje_for_log
+
+        
+

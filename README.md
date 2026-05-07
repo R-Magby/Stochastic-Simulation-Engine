@@ -17,7 +17,8 @@ históricos descargados directamente desde Yahoo Finance.
 | **Pandas** | ≥ 2.0 | Manejo de series temporales |
 | **SciPy** | ≥ 1.11 | Estadísticos (skewness, kurtosis) |
 | **Matplotlib** | ≥ 3.7 | Visualización de trayectorias |
-| **Docker** | ≥ 24 | Entorno reproducible (sin instalar dependencias localmente) |
+| **Docker** | ≥ 24 | Entorno reproducible |
+| **openpyxl** | ≥ 3.0 | Generación de reportes Excel |
 
 ---
 

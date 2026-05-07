@@ -164,7 +164,7 @@ def get_logger(name: str) -> logging.Logger:
 # Utilidades de logging estructurado
 # ─────────────────────────────────────────────────────────────────────────────
 
-def log_parametros_simulacion(logger: logging.Logger,parameter : str) -> None:
+def log_parametros_simulacion(logger: logging.Logger,msg_parameter : str, parametros: dict) -> None:
     """
     Registra en INFO los parámetros clave de una simulación Monte Carlo.
     Input:
@@ -179,12 +179,12 @@ def log_parametros_simulacion(logger: logging.Logger,parameter : str) -> None:
         None
     """
     try:
-        logger.info(parameter)
+        logger.info("Parámetros de simulación: " + msg_parameter.format(**parametros))
     except Exception as e:
         logger.error("Error al registrar parámetros de simulación: %s", e)
 
 
-def log_metricas_riesgo(logger: logging.Logger, menssage_risk : str) -> None:
+def log_metricas_riesgo(logger: logging.Logger, menssage_risk : str,parametros: dict) -> None:
     """
     Registra en INFO las métricas de riesgo calculadas tras la simulación.
 
@@ -198,4 +198,7 @@ def log_metricas_riesgo(logger: logging.Logger, menssage_risk : str) -> None:
     Output:
         None
     """
-    logger.info(menssage_risk)
+    try:
+        logger.info("Metricas de riesgo: " + menssage_risk.format(**parametros))
+    except Exception as e:
+        logger.error("Error al registrar métricas de riesgo: %s", e)

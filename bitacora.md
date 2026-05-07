@@ -25,6 +25,22 @@ Version 3
 1) Solucionar Graficos
 2) Implementar modelo Heston
 3) Análisis de predicciones de los modelos
+
+
+Version 4
+1) Mejoras en excel
+2) Analisis comparativo
+3) benchmark
+4) ajustar analisis de error con la mediana, p90  y p50
+5) Benchmark en el reporte
+
+version 5
+1) _logging si olvido ejecutar la simulation simulate()
+2) _agregar en el historial de reportessi cumple la condiciond e faller
+3) _speedup
+
+
+_Comprobar las versiones del requirements.txt
 4) _Multiporcessing en Heston 
 5) _Mejoras en la documentacion
 6) _Mejoras en la implementacion del logger

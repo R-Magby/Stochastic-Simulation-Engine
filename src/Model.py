@@ -235,10 +235,6 @@ class HestonModel(MonteCarloSimulator):
         np.ndarray
             Matriz (N_casos_posibles, dias_de_simulacion) de precios simulados.
         """
-        logger.info(
-            "HestonModel.simulate() | N=%d | T=%d | optimize=%s",
-            self.N_casos_posibles, self.dias_de_simulacion, self.optimize,
-        )
         self._init_variables()
 
         if self.optimize == "For":
@@ -261,7 +257,6 @@ class HestonModel(MonteCarloSimulator):
         None (Actualiza self.S_t y self.V_t)
         """
         try:
-            logger.info("HestonModel | ForLoop iniciado | T=%d pasos", self.dias_de_simulacion)
             sqrt_dt = np.sqrt(self.dt)
 
             for t in range(1, self.dias_de_simulacion):
